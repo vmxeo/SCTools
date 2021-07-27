@@ -14,9 +14,9 @@ from bpy.types import Operator
 context = bpy.context
 scene = context.scene
 import_basedir = r'x:/sc312/data/'
-option_brushes = True
-option_component = True
-option_lights = False
+option_brushes = False
+option_component = False
+option_lights = True
 option_spawn = False
 option_preconvert = False
 option_fixorphans = True
@@ -38,9 +38,10 @@ def buildPrefab(context, xml_path):
         index_elements = 0
         if index_elements > 1: break
         for subelement in element[0]:                    
-            index_elements += 1            
+            index_elements += 1
+            progress = '(' + str(index_elements) + '/' + str(total_elements) + ')'            
             if option_brushes and subelement.get('Type') == 'Brush':
-                writetoLog(subelement.get('Type') + ": " + subelement.get('Name'))
+                writetoLog(progress + subelement.get('Type') + ": " + subelement.get('Name'))
                 new_assetfilename = import_basedir + subelement.get('Prefab')
                 new_assetfilename = new_assetfilename.replace('\\', '/')
                 new_assetfilename = new_assetfilename.replace('.cgf', '.dae')
@@ -95,8 +96,8 @@ def buildPrefab(context, xml_path):
             elif option_lights and subelement.get('Type') == 'Entity' and subelement.get('EntityClass') == "Light":
                 
                 writetoLog(subelement.get('Type') + ": " + subelement.get('Name'))
-                
-                lightType = subelement.findall('./PropertiesDataCore/EntityComponentLight')[0].get('lightType')
+                                
+                lightType = subelement.findall('./PropertiesDataCore/EntityComponentLight').get('lightType')
                 useTemperature = subelement.findall('./PropertiesDataCore/EntityComponentLight')[0].get('useTemperature')
                 bulbRadius = subelement.findall('./PropertiesDataCore/EntityComponentLight/sizeParams')[0].get('bulbRadius') or .01
                 planeHeight = subelement.findall('./PropertiesDataCore/EntityComponentLight/sizeParams')[0].get('PlaneHeight') or 1

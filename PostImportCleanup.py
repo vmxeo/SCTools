@@ -4,6 +4,7 @@ scene = context.scene
 
 option_deleteproxymat = True
 option_offsetdecals = False
+option_cleanupimages = True
 
 
 def main(context):
@@ -83,6 +84,28 @@ def importCleanup(context):
             if bpy.data.collections.find("Interior") == -1:
                 bpy.data.collections.new("Interior")
             #bpy.data.collections['Interior'].objects.link(obj)
+            
+    if option_cleanupimages :
+        for img in bpy.data.images:
+            if "." not in img.name_full:
+                continue
+            if '.dds' in img.filepath: 
+                tiffile = img.name.replace('.dds', '.tif')
+                try:
+                    newimg = bpy.data.images.load(tiffile, check_existing=True)
+                except:
+                    print('not found: ' + tiffile)
+                    continue
+                img.user_remap(newimg)
+                img.filepath = tiffile
+                print(img.name_full + " -> " + newimg.name_full) 
+            head, tail = img.name_full.rsplit(".", 1)     
+            if bpy.data.images.get(head):
+                print(img.name_full + " -> " + head) 
+                img.user_remap(bpy.data.images.get(head))
+            elif tail.isdigit():
+                print(img.name_full + " is now " + head) 
+                img.name = head
 
     bpy.ops.outliner.orphans_purge(num_deleted=0)
     return {'FINISHED'} 

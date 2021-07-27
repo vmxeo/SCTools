@@ -82,6 +82,9 @@ def parseXML(xml_path):
             import_obj = bpy.context.selected_objects
             for obj in import_obj:
                 obj['Filename'] = dae_filename
+                obj['Material'] = readMtlfromDAE(dae_filename)
+                if obj.type == 'MESH':
+                    obj.data['Filename'] = dae_filename
                 try:
                     bpy.data.collections[xml_path].objects.link(obj)
                 except:
@@ -92,7 +95,7 @@ def parseXML(xml_path):
             if 'Merged' in obj.name:
                 filename = obj['Filename'].rpartition('/')[2]
                 filename = filename.replace('.dae', '')
-                print(filename)
+                #print(filename)
                 obj.name = filename + '.Merged'
                 if scene.objects.get(filename) and scene.objects.get(filename).type == 'EMPTY':
                     print('found parent ' + filename)
@@ -101,7 +104,7 @@ def parseXML(xml_path):
     if option_findmtls:
         for file in file_list:        
             folder = glob.glob(file.rsplit('/',1)[0] + '/*.mtl')
-            print(folder)
+            #print(folder)
             for mtl in folder:
                 if not mtl in mat_list:
                     mat_list.append(mtl)
@@ -126,6 +129,7 @@ def parseXML(xml_path):
     log_text = (bpy.data.texts.get(log_mats) or bpy.data.texts.new(log_mats))
     
     for mat in mat_list:
+        mat = mat.replace(r"/", "\\")
         print(mat)
         log_text.write(mat + '\n')
         
@@ -135,7 +139,17 @@ def stripPath(path):
     path = path.replace('\\', '/')
     path = path.rsplit('/',1)[1]
     path = path.rsplit('.',1)[0]
-    return path     
+    return path
+
+def readMtlfromDAE(path):
+    ns = {'': 'http://www.collada.org/2005/11/COLLADASchema'}
+    try:
+        xml_root = ElementTree.parse(path).getroot()
+    except:
+        print('Unable to open DAE: ', path)
+        return None    
+    return xml_root.find('./asset/extra', ns).get('name')
+        
                         
 class ImportParseXml(Operator, ImportHelper):
     bl_idname = "import_sctools.preimport"  
